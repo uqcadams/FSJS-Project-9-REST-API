@@ -7,8 +7,17 @@ module.exports = (sequelize, DataTypes) => {
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
+
+    // Defining the One-to-Many relationship
     static associate(models) {
-      this.hasMany(models.Course);
+      this.hasMany(models.Course, {
+        // Synchronising association options across models
+        as: "associatedUser",
+        foreignKey: {
+          fieldName: "userId",
+          allowNull: false,
+        },
+      });
     }
   }
   User.init(
@@ -26,7 +35,6 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "User",
-      tableName: "users",
     }
   );
   return User;

@@ -1,19 +1,30 @@
 "use strict";
 
-// load modules
+// Load modules
 const express = require("express");
 const morgan = require("morgan");
 
-// load api routes
+// Load api routes
 const routes = require("./routes");
 
-const { sequelize } = require("./models/index");
+// Import sequelize instance
+const { sequelize } = require("./models");
 
 // Test connection with sequelize
+console.log("Testing the connection to the database...");
 sequelize
   .authenticate()
   .then(() => console.log("Connection has been established successfully!"))
   .catch((error) => console.error("Unable to connect to the database:", error));
+
+// Attempt to synchronise the models with the database
+console.log("Synchronizing the models with the database...");
+sequelize
+  .sync()
+  .then(() => console.log("Sync was successful!"))
+  .catch((error) =>
+    console.log("An error occured while syncing the models:", error)
+  );
 
 // variable to enable global error logging
 const enableGlobalErrorLogging =

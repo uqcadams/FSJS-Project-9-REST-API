@@ -7,9 +7,16 @@ module.exports = (sequelize, DataTypes) => {
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
+
+    // Defining the One-to-One relationship
     static associate(models) {
       this.belongsTo(models.User, {
-        as: "user", // "as" will append "user" to the primaryKey ("Id") --> "userId"
+        // Synchronising association options across models
+        as: "associatedUser",
+        foreignKey: {
+          fieldName: "userId",
+          allowNull: false,
+        },
       });
     }
   }
@@ -28,7 +35,6 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "Course",
-      tableName: "courses",
     }
   );
   return Course;
