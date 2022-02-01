@@ -25,15 +25,15 @@ const app = express();
 // setup morgan which gives us http request logging
 app.use(morgan("dev"));
 
+// Add routes
+app.use("/api", routes);
+
 // setup a friendly greeting for the root route
 app.get("/", (req, res) => {
   res.json({
     message: "Welcome to the REST API project!",
   });
 });
-
-// Add routes
-app.use("/api", routes);
 
 // send 404 if no other route matched
 app.use((req, res) => {

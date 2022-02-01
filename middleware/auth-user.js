@@ -28,7 +28,7 @@ exports.authenticateUser = async (req, res, next) => {
       // Hash and compare the provided credentials and those in database
       const authenticated = bcrypt.compareSync(
         credentials.password,
-        user.confirmedPassword
+        user.password
       );
       // If the passwords match and the user is authenticated...
       if (authenticated) {

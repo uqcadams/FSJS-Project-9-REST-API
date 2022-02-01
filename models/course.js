@@ -8,7 +8,6 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
       this.belongsTo(models.User, {
         as: "user", // "as" will append "user" to the primaryKey ("Id") --> "userId"
       });
@@ -29,6 +28,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "Course",
+      tableName: "courses",
     }
   );
   return Course;
