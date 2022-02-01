@@ -65,10 +65,25 @@ router.get(
 );
 
 // POST a new user
+// router.post("/users", async (req, res) => {
+//   try {
+//     await User.create(req.body);
+//     res
+//       .status(201)
+//       .set({ Location: "/" })
+//       .json({ message: "Account successfully created!" }); // Delete later, no content required here
+//   } catch (error) {
+//     res.status(400).json({ message: "That didn't work, bud!" });
+//   }
+// });
+
 router.post("/users", async (req, res) => {
   try {
     // Get the user from the request body
     const user = req.body;
+
+    // Initialise an empty array for error messages
+    const errors = [];
 
     // Define input validation fields
     const validationFields = [
@@ -79,9 +94,9 @@ router.post("/users", async (req, res) => {
     ];
 
     // Pass user details and validation fields to input validation helper function
-    const errors = validateInput(user, validationFields);
+    validateInput(user, validationFields);
 
-    // Check if there are any errors...
+    // If there are any errors...
     if (errors.length > 0) {
       res.status(400).json({ errors });
     } else {
@@ -138,24 +153,12 @@ router.get("/courses/:id", async (req, res) => {
 // POST new course
 router.post("/courses", async (req, res) => {
   try {
-    const course = req.body;
-
-    // Define input validation fields
-    const validationFields = ["title", "description"];
-
-    // Pass user details and validation fields to input validation helper function
-    const errors = validateInput(course, validationFields);
-
-    // Check if there are any errors...
-    if (errors.length > 0) {
-      res.status(400).json({ errors });
-    } else {
-      await Course.create(req.body);
-      res
-        .status(201)
-        .set({ Location: "/" })
-        .json({ message: "Course successfully added!" }); // Delete later, no content required here
-    }
+    // Attempt to create a new course using data provided in the request body
+    await Course.create(req.body);
+    res
+      .status(201)
+      .set({ Location: "/" })
+      .json({ message: "Course successfully added!" }); // Delete later, no content to be returned
   } catch (error) {
     res.status(400).json({ message: "That didn't work, bud!" });
   }
@@ -167,24 +170,13 @@ router.put("/courses/:id", async (req, res) => {
     // Store the request body content
     const course = req.body;
 
-    // Define input validation fields
-    const validationFields = ["title", "description"];
-
-    // Pass user details and validation fields to input validation helper function
-    const errors = validateInput(course, validationFields);
-
-    // Check if there are any errors...
-    if (errors.length > 0) {
-      res.status(400).json({ errors });
-    } else {
-      // Update course with new details
-      await Course.update(course, {
-        where: {
-          id: req.params.id,
-        },
-      });
-      res.status(204).end();
-    }
+    // Update course with new details
+    await Course.update(course, {
+      where: {
+        id: req.params.id,
+      },
+    });
+    res.status(204).end();
   } catch (error) {
     res.status(400).json({ message: "That didn't work, bud!" });
   }

@@ -2,19 +2,31 @@
 
 const bcrypt = require("bcryptjs");
 
-exports.validateInput = (user, inputFields) => {
-  inputFields.forEach((field) => {
-    if (!user[field]) {
+/** Validates user input against potential validation fields
+ *
+ * @param {object} user - the user input to be validated
+ * @param {array} inputFields - the validation fields to be evaluated
+ * @returns {array} errors - an array of validation errors
+ */
+exports.validateInput = (userInput, validationFields) => {
+  // Initialise an empty array for error messages
+  let errors = [];
+
+  validationFields.forEach((field) => {
+    if (!userInput[field]) {
       errors.push(`Please provide a value for the "${field}" field!`);
     }
 
     if (field === "password") {
-      if (user.password.length < 8 || user.password.length > 20) {
-        console.log(`Password is ${user.password}`);
-        errors.push("Your password should be between 8 and 20 characters");
+      if (userInput.password.length < 8 || userInput.password.length > 20) {
+        errors.push(
+          `Your password should be between 8 and 20 characters. It is currently ${userInput.password.length} characters long.`
+        );
       } else {
-        user.password = bcrypt.hashSync(user.password, 10);
+        userInput.password = bcrypt.hashSync(userInput.password, 10);
       }
     }
   });
+
+  return errors;
 };
