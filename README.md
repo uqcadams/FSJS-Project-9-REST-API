@@ -2,6 +2,9 @@
 
 Full Stack JavaScript Project 9 - REST API
 
+Author: Chris Adams
+Date: 02/02/2022
+
 # Change log:
 
 [31 Jan 2022] - Changed port from 5000 to 3000 in app.js to avoid macOS Monterey issue.
@@ -9,33 +12,21 @@ Full Stack JavaScript Project 9 - REST API
 [01 Feb 2022] - Implemented basic routing and validation functionalities.
 [02 Feb 2022] - Designed and implemented custom input validation helper function to reduce code bloat.
 [02 Feb 2022] - Implemented custom user authentication middleware.
+[02 Feb 2022] - Completed routing and postman tests.
+[02 Feb 2022] - Added custom console log colors and misc util functions to assist readability.
 
 # Notes:
 
-Interesting - when generating foreign keys via associations, it takes the target model name and the target primary key name, and concatenates them in camelCase. So by defining the target model {as: "user"}, and in the User model the primary key is named "id", then the concatenation becomes userId. Interesting!
+This project establishes a number of routes to create, read, update, and delete user and course records within the provided database. It includes authentication and validation requirements, and requires user validation and matching for updating or deleting restricted resources.
 
-// // DELETE specific course
-// router.delete("/courses/:id", authenticateUser, async (req, res) => {
-// // Otherwise, try to locate the course and isolate the associated userId value
-// try {
-// const course = await Course.findOne({ where: { id: req.params.id } });
-// const { userId } = course.dataValues;
+Some notable additions beyond the initial scope of the project:
 
-// // If the associated userId matches the authenticated user's ID, update the course
-// if (req.currentUser.id == userId) {
-// await Course.destroy({
-// where: {
-// id: req.params.id,
-// },
-// });
-// res.status(204).end();
-// } else {
-// // Otherwise, return a 403 error and reject the authentication match
-// res.status(403).json({
-// message: "You are not the authenticated owner of this resource",
-// });
-// }
-// } catch (error) {
-// res.status(400).json({ message: "An error has occurred", error });
-// }
-// });
+1. userIsOwner.js acts as express middleware for certain routes to determine whether the user attempting to modify or delete resources matches the associated owner of the resource. When the user's id and the courses associated userId field match, the middleware proceeds to the intended functionalities. When the match fails, an error is thrown and the user (authorised or not) is not permitted to access or edit those resources.
+
+2. validate.js acts as a utility function to simplify the validation process. Routes define custom validation fields in the form of an array of strings, which are then iterated over using the validation function. This creates a more dynamic and scalable solution for input validation.
+
+3. logFonts.js is a simple color-modifying utility module that modifies the node.js console font colours, to aid in the legibility of process errors and successes. The provides additional feedback to the developer.
+
+4. In routes.js, model associations and result exclusions have been stored in variables to reduce bloating. userExclusions standardise the results returned for user details, and ensures that when course records are pulled, they don't bring with them the associated user password details. These are included within the routes using spread operators.
+
+I chose not to use an asyncHandler function for this implementation, as I felt it gave me greater control in understanding the process of route development and implementation.

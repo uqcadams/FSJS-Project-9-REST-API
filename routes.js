@@ -9,10 +9,18 @@ const router = express.Router();
 
 // Import the model datasets
 const { models } = require("./models");
-const { validateInput } = require("./utils/validate");
-const { authenticateUser } = require("./middleware/auth-user");
-const { userIsOwner } = require("./utils/userIsOwner");
 const { User, Course } = models;
+
+// Middleware
+const { authenticateUser } = require("./middleware/auth-user");
+const { userIsOwner } = require("./middleware/userIsOwner");
+
+// Express middleware to expect JSON data via the request body
+router.use(express.json());
+
+// Utils
+const { validateInput } = require("./utils/validate");
+const { logSuccessFont, logErrorFont } = require("./utils/logFonts"); // a visible log font colours for successful/unsuccessful interactions.
 
 // Association Options
 const associationOptions = {
@@ -20,25 +28,12 @@ const associationOptions = {
   as: "associatedUser",
 };
 
+// Pre-defined user exclusions to prevent returning of passwords across queries.
 const userExclusions = {
   attributes: {
     exclude: ["password", "createdAt", "updatedAt"],
   },
 };
-
-// Handler function to wrap each route
-function asyncHandler(cb) {
-  return async (req, res, next) => {
-    try {
-      await cb(req, res, next);
-    } catch (error) {
-      res.status(500).send(error);
-    }
-  };
-}
-
-// Express middleware to expect JSON data via the request body
-router.use(express.json());
 
 /***************/
 /* USER ROUTES */
@@ -59,9 +54,17 @@ router.get("/users", authenticateUser, async (req, res) => {
     });
 
     // Set status to 200 and return user data
+    console.log(
+      logSuccessFont,
+      "User records have been successfully returned for the authenticated user"
+    );
     res.status(200).json(user);
   } catch (error) {
     // Return the error
+    console.log(
+      logErrorFont,
+      `An error occurred while attempting to return records for the authenticated user. Error reference: ${error.message}.`
+    );
     res.status(400).json({ error });
   }
 });
@@ -81,12 +84,24 @@ router.post("/users", async (req, res) => {
     const errors = validateInput(req.body, validationFields);
     // Check if there are any errors...
     if (errors.length > 0) {
+      console.log(
+        logErrorFont,
+        `Input validation errors prevented a new user record from being created.`
+      );
       res.status(400).json({ errors });
     } else {
       await User.create(req.body);
+      console.log(
+        logSuccessFont,
+        "A new user record has been successfully added to the database."
+      );
       res.status(201).set({ Location: "/" }).end();
     }
   } catch (error) {
+    console.log(
+      logErrorFont,
+      `An error occurred while attempting to add a new user record to the database. Error reference: ${error.message}.`
+    );
     res.status(400).json({ error });
   }
 });
@@ -111,8 +126,16 @@ router.get("/courses", async (req, res) => {
       },
     });
     // Return status 200 and course collection
+    console.log(
+      logSuccessFont,
+      "All course records and their associations have been successfully returned."
+    );
     res.status(200).json(courses);
   } catch (error) {
+    console.log(
+      logErrorFont,
+      "An error occurred while attempting to return all course records and their associations."
+    );
     res.status(400).json(error);
   }
 });
@@ -137,12 +160,24 @@ router.get("/courses/:id", async (req, res) => {
     });
     if (course) {
       // Return the course and association data
+      console.log(
+        logSuccessFont,
+        `Course records for "${course.dataValues.title}" have successfully been retrieved from the database.`
+      );
       res.status(200).json(course);
     } else {
       // Return a message that no corresponding course was found.
+      console.log(
+        logErrorFont,
+        `The requested course record does not exist in the database. Reference ID: ${req.params.id}`
+      );
       res.status(400).json({ message: "No course was found with that id." });
     }
   } catch (error) {
+    console.log(
+      logErrorFont,
+      "An error occurred while attempting to retrieve course records from the database."
+    );
     res.status(400).json(error);
   }
 });
@@ -159,45 +194,94 @@ router.post("/courses", authenticateUser, async (req, res) => {
     // Check if there are any errors...
     if (errors.length > 0) {
       // If errors exist, return the error object
+      console.log(
+        logErrorFont,
+        `Input validation errors prevented a new course record from being created.`
+      );
       res.status(400).json({ errors });
     } else {
       // Otherwise, create a new course using the user input
       let course = await Course.create(req.body);
+      console.log(
+        logSuccessFont,
+        "A new course record has been successfully added to the database."
+      );
       res
         .status(201)
         .set({ Location: `/courses/${course.dataValues.id}` })
         .end();
     }
   } catch (error) {
-    res.status(400).json({ message: "That didn't work, bud!" });
+    if (
+      error.name === "SequelizeValidationError" ||
+      error.name === "SequelizeUniqueConstraintError"
+    ) {
+      const errors = error.errors.map((err) => err.message);
+      res.status(400).json({ errors });
+    } else {
+      console.log(
+        logErrorFont,
+        "An error occurred while attempting to add a new course record to the database."
+      );
+      res
+        .status(500)
+        .json({
+          message:
+            "An error occurred while attempting to add a new course record to the database.",
+        });
+    }
   }
 });
 
 // UPDATE specific course
 router.put("/courses/:id", authenticateUser, userIsOwner, async (req, res) => {
   try {
-    const validationFields = ["title", "description"]; // Define input validation fields
+    // Define input validation fields
+    const validationFields = ["title", "description"];
 
-    const errors = validateInput(req.body, validationFields); // Pass user details and validation fields to input validation helper function
+    // Pass user details and validation fields to input validation helper function
+    const errors = validateInput(req.body, validationFields);
 
+    // If the error array is populated, throw an error and return error messages to user.
     if (errors.length > 0) {
-      // If the error array is populated, throw an error and return error messages to user.
+      console.log(
+        logErrorFont,
+        `Input validation errors prevented a course record from being updated.`
+      );
       res.status(400).json({ errors });
     } else {
-      // Otherwise, try to locate the course and isolate the associated userId value
+      // Otherwise, update the course record with the new data.
       try {
         await Course.update(req.body, {
           where: {
             id: req.params.id,
           },
         });
+        console.log(
+          logSuccessFont,
+          `A record was successfully updated in the dataset by an authorised user.`
+        );
         res.status(204).end();
       } catch (error) {
-        res.status(400).json({ message: "No corresponding course exists" });
+        console.log(
+          logErrorFont,
+          `An error occurred while attempting to locate the requested course resource. It may not exist in the dataset. Reference ID: ${req.params.id}`
+        );
+        res.status(400).json({
+          message:
+            "An error occurred while attempting to locate the requested course resource. It may not exist in the dataset.",
+        });
       }
     }
   } catch (error) {
-    res.status(400).json({ message: "An error has occurred", error });
+    console.log(
+      logErrorFont,
+      "An error occurred while attempting to validate user input."
+    );
+    res.status(400).json({
+      message: "An error has occurred while attempting to validate your input.",
+      error,
+    });
   }
 });
 
@@ -208,15 +292,27 @@ router.delete(
   userIsOwner,
   async (req, res) => {
     try {
+      // Attempt to destroy the corresponding course from the dataset.
       await Course.destroy({
         where: {
           id: req.params.id,
         },
       });
-      console.log("The record was succesfully deleted from the dataset.");
+      console.log(
+        logSuccessFont,
+        "The record was successfully deleted from the dataset."
+      );
       res.status(204).end();
     } catch (error) {
-      res.status(400).json({ message: "An error has occurred", error });
+      console.log(
+        logErrorFont,
+        "An error occurred while attempting to delete the record from the dataset."
+      );
+      res.status(400).json({
+        message:
+          "An error has occurred while attempting to delete the record from the dataset",
+        error,
+      });
     }
   }
 );

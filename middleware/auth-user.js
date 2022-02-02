@@ -8,6 +8,9 @@ const bcrypt = require("bcryptjs");
 const { models } = require("../models");
 const { User } = models;
 
+// Utils
+const { logErrorFont, logSuccessFont } = require("../utils/logFonts");
+
 // Middleware to authenticate the request using Basic Authentication
 exports.authenticateUser = async (req, res, next) => {
   // Initialise an empty variable to store the custom response message.
@@ -47,7 +50,7 @@ exports.authenticateUser = async (req, res, next) => {
   // If an error message exists...
   if (message) {
     // Deny access and inform the user
-    console.warn(message);
+    console.log(logErrorFont, "User authentication error: ", message);
     res.status(401).json({ message: "Access Denied!" });
   } else {
     // Continue to the appropriate route
