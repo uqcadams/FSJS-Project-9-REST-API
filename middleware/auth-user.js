@@ -5,7 +5,8 @@ const auth = require("basic-auth");
 const bcrypt = require("bcryptjs");
 
 // Load User model
-const { User } = require("../models");
+const { models } = require("../models");
+const { User } = models;
 
 // Middleware to authenticate the request using Basic Authentication
 exports.authenticateUser = async (req, res, next) => {
@@ -20,16 +21,13 @@ exports.authenticateUser = async (req, res, next) => {
     // Search for user with matching email in dataset
     const user = await User.findOne({
       where: {
-        emailAddress: credentials.emailAddress,
+        emailAddress: credentials.name,
       },
     });
     // If the user exists in the dataset...
     if (user) {
       // Hash and compare the provided credentials and those in database
-      const authenticated = bcrypt.compareSync(
-        credentials.password,
-        user.password
-      );
+      const authenticated = bcrypt.compareSync(credentials.pass, user.password);
       // If the passwords match and the user is authenticated...
       if (authenticated) {
         console.log(
@@ -40,7 +38,7 @@ exports.authenticateUser = async (req, res, next) => {
         message = `Authentication failure for user with email: ${user.emailAddress}`;
       }
     } else {
-      message = `User not found for email: ${credentials.emailAddress}`;
+      message = `User not found for email: ${credentials.name}`;
     }
   } else {
     message = `Authentication header not found`;

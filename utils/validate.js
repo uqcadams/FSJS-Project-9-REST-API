@@ -17,7 +17,7 @@ exports.validateInput = (userInput, validationFields) => {
       errors.push(`Please provide a value for the "${field}" field!`);
     }
 
-    if (field === "password") {
+    if (field === "password" && userInput.password) {
       if (userInput.password.length < 8 || userInput.password.length > 20) {
         errors.push(
           `Your password should be between 8 and 20 characters. It is currently ${userInput.password.length} characters long.`
