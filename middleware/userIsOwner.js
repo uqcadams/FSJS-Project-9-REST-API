@@ -19,7 +19,10 @@ exports.userIsOwner = async (req, res, next) => {
 
     // If the associated userId matches the authenticated user's ID, proceed.
     if (req.currentUser.id == userId) {
-      console.log("User is authenticated for resource modification.");
+      console.log(
+        logSuccessFont,
+        "User is authenticated for resource modification."
+      );
       next();
     } else {
       // If IDs do not match, reject the request and return an error message.
@@ -28,7 +31,7 @@ exports.userIsOwner = async (req, res, next) => {
         "User has not been authenticated for resource modification."
       );
       res
-        .status(400)
+        .status(403)
         .json({ message: "You are not authorised to modify this record." });
     }
   } catch (error) {
